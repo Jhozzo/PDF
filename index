@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procesador de Etiquetas Servientrega</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .upload-zone {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 60px 30px;
+            text-align: center;
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        .upload-zone:hover, .upload-zone.drag-over {
+            background: #eef1ff;
+            border-color: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .upload-zone svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .upload-zone p {
+            font-size: 18px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .upload-zone small {
+            display: block;
+            margin-top: 10px;
+            color: #666;
+        }
+
+        .files-section, .labels-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .file-item:hover {
+            background: #e9ecef;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .file-status {
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-ok { color: #28a745; }
+        .status-manual { color: #ffc107; }
+        .status-password { color: #dc3545; }
+        .status-processing { color: #17a2b8; }
+
+        .file-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .file-actions button:hover {
+            background: #dee2e6;
+        }
+
+        .labels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .label-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: move;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .label-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.2);
+        }
+
+        .label-thumbnail {
+            width: 100%;
+            height: 140px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+
+        .label-thumbnail img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .label-info {
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+        }
+
+        .label-remove {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .config-section {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .config-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .config-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .config-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .config-group select,
+        .config-group input {
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .config-group select:focus,
+        .config-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102,126,234,0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #f8f9ff;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .pages-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .page-option {
+            border: 3px solid #e9ecef;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-option.selected {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .page-option:hover {
+            border-color: #764ba2;
+        }
+
+        .page-preview {
+            width: 100%;
+            height: 180px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-preview canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .config-row {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 2000;
+            display: none;
+            max-width: 400px;
+        }
+
+        .toast.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 Procesador de Etiquetas Servientrega</h1>
+            <p>Procesa múltiples PDFs y genera un documento consolidado - 100% privado y local</p>
+        </div>
+
+        <div class="content">
+            <!-- Upload Zone -->
+            <div class="upload-zone" id="uploadZone">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                <p>Arrastra PDFs aquí o haz clic para seleccionar</p>
+                <small>Se procesan completamente en tu navegador - sin subir archivos</small>
+                <input type="file" id="fileInput" multiple accept=".pdf" style="display: none;">
+            </div>
+
+            <!-- Progress -->
+            <div class="progress-bar" id="progressBar" style="display: none;">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <!-- Files Section -->
+            <div class="files-section" id="filesSection" style="display: none;">
+                <div class="section-title">
+                    📄 Archivos Cargados (<span id="fileCount">0</span>)
+                </div>
+                <div id="filesList"></div>
+            </div>
+
+            <!-- Selected Labels Section -->
+            <div class="labels-section" id="labelsSection" style="display: none;">
+                <div class="section-title">
+                    ✅ Páginas Seleccionadas (<span id="labelCount">0</span>)
+                    <small style="font-weight: normal; font-size: 13px; color: #666;">Arrastra para reordenar</small>
+                </div>
+                <div class="labels-grid" id="labelsGrid">
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <p>No hay páginas seleccionadas aún</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuration Section -->
+            <div class="config-section" id="configSection" style="display: none;">
+                <div class="section-title">⚙️ Configuración</div>
+                
+                <div class="config-row">
+                    <div class="config-group">
+                        <label>Diseño de cuadrícula</label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="layout" value="2x3" checked> 2×3 (vertical)
+                            </label>
+                            <label>
+                                <input type="radio" name="layout" value="3x2"> 3×2 (horizontal)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="config-group">
+                        <label>Tamaño de hoja</label>
+                        <select id="pageSize">
+                            <option value="auto">Auto detectado</option>
+                            <option value="a4-portrait">A4 Vertical</option>
+                            <option value="a4-landscape">A4 Horizontal</option>
+                            <option value="letter-portrait">Carta Vertical</option>
+                            <option value="letter-landscape">Carta Horizontal</option>
+                        </select>
+                    </div>
+
+                    <div class="config-group">
+                        <label>Separación (mm)</label>
+                        <input type="number" id="gutterSize" value="5" min="0" max="20" step="1">
+                    </div>
+                </div>
+
+                <div class="config-group">
+                    <label>Nombre del archivo</label>
+                    <input type="text" id="filename" value="">
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions" id="actionsSection" style="display: none;">
+                <button class="btn btn-secondary" id="previewBtn">
+                    🔍 Vista Previa
+                </button>
+                <button class="btn btn-primary" id="generateBtn">
+                    ⬇️ Generar y Descargar PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Selection Modal -->
+    <div class="modal" id="manualModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Seleccionar Páginas Manualmente</h2>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <p id="modalDescription">No se detectó automáticamente la página con "SERVIENTREGA". Selecciona las páginas que deseas conservar:</p>
+            <div class="pages-grid" id="pagesGrid"></div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-secondary" id="modalCancel" style="flex: 1;">Cancelar</button>
+                <button class="btn btn-primary" id="modalConfirm" style="flex: 1;">Confirmar Selección</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Load Libraries from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+
+    <script>
+        // Initialize PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // Application State
+        const appState = {
+            files: [],
+            selectedLabels: [],
+            currentModalFile: null
+        };
+
+        // DOM Elements
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const filesSection = document.getElementById('filesSection');
+        const filesList = document.getElementById('filesList');
+        const fileCount = document.getElementById('fileCount');
+        const labelsSection = document.getElementById('labelsSection');
+        const labelsGrid = document.getElementById('labelsGrid');
+        const labelCount = document.getElementById('labelCount');
+        const configSection = document.getElementById('configSection');
+        const actionsSection = document.getElementById('actionsSection');
+        const generateBtn = document.getElementById('generateBtn');
+        const previewBtn = document.getElementById('previewBtn');
+        const filename = document.getElementById('filename');
+        const toast = document.getElementById('toast');
+        const manualModal = document.getElementById('manualModal');
+        const modalClose = document.getElementById('modalClose');
+        const modalCancel = document.getElementById('modalCancel');
+        const modalConfirm = document.getElementById('modalConfirm');
+        const pagesGrid = document.getElementById('pagesGrid');
+
+        // Set default filename
+        const today = new Date();
+        const dateStr = today.toISOString().split('T')[0].replace(/-/g, '');
+        filename.value = `etiquetas_servientrega_${dateStr}.pdf`;
+
+        // Event Listeners
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('dragover', handleDragOver);
+        uploadZone.addEventListener('dragleave', handleDragLeave);
+        uploadZone.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+        generateBtn.addEventListener('click', generatePDF);
+        previewBtn.addEventListener('click', showPreview);
+        modalClose.addEventListener('click', closeModal);
+        modalCancel.addEventListener('click', closeModal);
+        modalConfirm.addEventListener('click', confirmManualSelection);
+
+        // Utility Functions
+        function showToast(message, duration = 3000) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        function updateProgress(percent) {
+            progressBar.style.display = 'block';
+            progressFill.style.width = percent + '%';
+            if (percent >= 100) {
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                    progressFill.style.width = '0%';
+                }, 500);
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
+            if (files.length > 0) {
+                processFiles(files);
+            } else {
+                showToast('⚠️ Por favor, solo archivos PDF');
+            }
+        }
+
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            processFiles(files);
+        }
+
+        async function processFiles(files) {
+            showToast(`📂 Procesando ${files.length} archivo(s)...`);
+            filesSection.style.display = 'block';
+            
+            for (let i = 0; i < files.length; i++) {
+                updateProgress((i / files.length) * 100);
+                await processFile(files[i]);
+            }
+            
+            updateProgress(100);
+            fileCount.textContent = appState.files.length;
+            updateUI();
+            showToast('✅ Archivos procesados');
+        }
+
+        async function processFile(file) {
+            const fileData = {
+                file: file,
+                name: file.name,
+                status: 'processing',
+                pages: [],
+                detectedPages: [],
+                error: null
+            };
+
+            appState.files.push(fileData);
+            renderFilesList();
+        }
+
+        function addLabelToSelection(fileData, pageNum) {
+            const pageData = fileData.pages.find(p => p.pageNum === pageNum);
+            if (pageData) {
+                appState.selectedLabels.push({
+                    fileData: fileData,
+                    pageNum: pageNum,
+                    thumbnail: pageData.thumbnail,
+                    width: pageData.width,
+                    height: pageData.height
+                });
+                updateLabelsGrid();
+            }
+        }
+
+        function renderFilesList() {
+            filesList.innerHTML = appState.files.map((fileData, idx) => {
+                let statusHTML = '';
+                let statusClass = '';
+                
+                switch(fileData.status) {
+                    case 'ok':
+                        statusClass = 'status-ok';
+                        statusHTML = '✓ Detectado automáticamente';
+                        break;
+                    case 'manual':
+                        statusClass = 'status-manual';
+                        statusHTML = '⚠️ Requiere selección manual';
+                        break;
+                    case 'processing':
+                        statusClass = 'status-processing';
+                        statusHTML = '<span class="spinner"></span> Procesando...';
+                        break;
+                    case 'error':
+                        statusClass = 'status-error';
+                        statusHTML = `❌ Error: ${fileData.error}`;
+                        break;
+                }
+                
+                return `
+                    <div class="file-item">
+                        <div class="file-info">
+                            <div class="file-name">${fileData.name}</div>
+                            <div class="file-status ${statusClass}">
+                                ${statusHTML} ${fileData.pages.length > 0 ? `(${fileData.pages.length} páginas)` : ''}
+                            </div>
+                        </div>
+                        <div class="file-actions">
+                            ${fileData.status === 'manual' ? 
+                                `<button onclick="showManualSelectionModal(appState.files[${idx}])">Seleccionar</button>` : 
+                                ''}
+                            <button onclick="removeFile(${idx})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateLabelsGrid() {
+            labelCount.textContent = appState.selectedLabels.length;
+            
+            if (appState.selectedLabels.length === 0) {
+                labelsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <p>No hay páginas seleccionadas aún</p>
+                    </div>
+                `;
+            } else {
+                labelsGrid.innerHTML = appState.selectedLabels.map((label, idx) => `
+                    <div class="label-card" draggable="true" data-idx="${idx}">
+                        <button class="label-remove" onclick="removeLabel(${idx})">×</button>
+                        <div class="label-thumbnail">
+                            <img src="${label.thumbnail}" alt="Etiqueta ${idx + 1}">
+                        </div>
+                        <div class="label-info">
+                            ${label.fileData.name}<br>
+                            Página ${label.pageNum}
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Add drag and drop for reordering
+                setupDragAndDrop();
+            }
+            
+            updateUI();
+        }
+
+        function setupDragAndDrop() {
+            const cards = labelsGrid.querySelectorAll('.label-card');
+            let draggedElement = null;
+            
+            cards.forEach(card => {
+                card.addEventListener('dragstart', function(e) {
+                    draggedElement = this;
+                    this.style.opacity = '0.5';
+                });
+                
+                card.addEventListener('dragend', function(e) {
+                    this.style.opacity = '1';
+                });
+                
+                card.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                });
+                
+                card.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    if (draggedElement !== this) {
+                        const fromIdx = parseInt(draggedElement.dataset.idx);
+                        const toIdx = parseInt(this.dataset.idx);
+                        
+                        // Reorder array
+                        const temp = appState.selectedLabels[fromIdx];
+                        appState.selectedLabels.splice(fromIdx, 1);
+                        appState.selectedLabels.splice(toIdx, 0, temp);
+                        
+                        updateLabelsGrid();
+                    }
+                });
+            });
+        }
+
+        function removeLabel(idx) {
+            appState.selectedLabels.splice(idx, 1);
+            updateLabelsGrid();
+            showToast('🗑️ Página eliminada');
+        }
+
+        function removeFile(idx) {
+            const file = appState.files[idx];
+            // Remove all labels from this file
+            appState.selectedLabels = appState.selectedLabels.filter(
+                label => label.fileData !== file
+            );
+            appState.files.splice(idx, 1);
+            renderFilesList();
+            updateLabelsGrid();
+            fileCount.textContent = appState.files.length;
+            showToast('🗑️ Archivo eliminado');
+        }
+
+        function updateUI() {
+            if (appState.selectedLabels.length > 0) {
+                labelsSection.style.display = 'block';
+                configSection.style.display = 'block';
+                actionsSection.style.display = 'flex';
+            } else {
+                labelsSection.style.display = 'none';
+                configSection.style.display = 'none';
+                actionsSection.style.display = 'none';
+            }
+        }
+
+        async function showManualSelectionModal(fileData) {
+            return new Promise((resolve) => {
+                appState.currentModalFile = fileData;
+                document.getElementById('modalTitle').textContent = `Seleccionar páginas - ${fileData.name}`;
+                
+                pagesGrid.innerHTML = fileData.pages.map((page, idx) => `
+                    <div class="page-option" data-page="${page.pageNum}">
+                        <div class="page-preview">
+                            <img src="${page.thumbnail}" alt="Página ${page.pageNum}">
+                        </div>
+                        <div style="text-align: center; font-size: 13px;">
+                            Página ${page.pageNum}
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Add click handlers
+                const pageOptions = pagesGrid.querySelectorAll('.page-option');
+                pageOptions.forEach(option => {
+                    option.addEventListener('click', function() {
+                        this.classList.toggle('selected');
+                    });
+                });
+                
+                manualModal.classList.add('active');
+                
+                // Store resolve function
+                appState.modalResolve = resolve;
+            });
+        }
+
+        function closeModal() {
+            manualModal.classList.remove('active');
+            if (appState.modalResolve) {
+                appState.modalResolve();
+            }
+        }
+
+        function confirmManualSelection() {
+            const selectedPages = Array.from(pagesGrid.querySelectorAll('.page-option.selected'));
+            
+            if (selectedPages.length === 0) {
+                showToast('⚠️ Selecciona al menos una página');
+                return;
+            }
+            
+            const fileData = appState.currentModalFile;
+            selectedPages.forEach(pageEl => {
+                const pageNum = parseInt(pageEl.dataset.page);
+                addLabelToSelection(fileData, pageNum);
+            });
+            
+            fileData.status = 'ok';
+            renderFilesList();
+            closeModal();
+            showToast(`✓ ${selectedPages.length} página(s) agregada(s)`);
+        }
+
+        async function generatePDF() {
+            if (appState.selectedLabels.length === 0) {
+                showToast('⚠️ No hay páginas seleccionadas');
+                return;
+            }
+            
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<span class="spinner"></span> Generando PDF...';
+            
+            try {
+                const layout = document.querySelector('input[name="layout"]:checked').value;
+                const [cols, rows] = layout === '2x3' ? [2, 3] : [3, 2];
+                const gutterMm = parseFloat(document.getElementById('gutterSize').value);
+                const gutterPt = gutterMm * 2.83465; // mm to points
+                
+                // Determine page size
+                const pageSizeOption = document.getElementById('pageSize').value;
+                let pageWidth, pageHeight;
+                
+                if (pageSizeOption === 'auto') {
+                    // Use A4 landscape as default
+                    pageWidth = 841.89; // A4 landscape width in points
+                    pageHeight = 595.28; // A4 landscape height in points
+                } else {
+                    const sizes = {
+                        'a4-portrait': [595.28, 841.89],
+                        'a4-landscape': [841.89, 595.28],
+                        'letter-portrait': [612, 792],
+                        'letter-landscape': [792, 612]
+                    };
+                    [pageWidth, pageHeight] = sizes[pageSizeOption];
+                }
+                
+                // Create new PDF
+                const pdfDoc = await PDFLib.PDFDocument.create();
+                
+                // Calculate cell dimensions
+                const totalGutterX = gutterPt * (cols + 1);
+                const totalGutterY = gutterPt * (rows + 1);
+                const cellWidth = (pageWidth - totalGutterX) / cols;
+                const cellHeight = (pageHeight - totalGutterY) / rows;
+                
+                // Process labels in batches of 6
+                const labelsPerPage = cols * rows;
+                const totalPages = Math.ceil(appState.selectedLabels.length / labelsPerPage);
+                
+                for (let pageIdx = 0; pageIdx < totalPages; pageIdx++) {
+                    const page = pdfDoc.addPage([pageWidth, pageHeight]);
+                    const startIdx = pageIdx * labelsPerPage;
+                    const endIdx = Math.min(startIdx + labelsPerPage, appState.selectedLabels.length);
+                    const labelsInPage = appState.selectedLabels.slice(startIdx, endIdx);
+                    
+                    updateProgress((pageIdx / totalPages) * 100);
+                    
+                    for (let i = 0; i < labelsInPage.length; i++) {
+                        const label = labelsInPage[i];
+                        const row = Math.floor(i / cols);
+                        const col = i % cols;
+                        
+                        // Calculate position (top-left origin)
+                        const x = gutterPt + col * (cellWidth + gutterPt);
+                        const y = pageHeight - gutterPt - (row + 1) * (cellHeight + gutterPt);
+                        
+                        try {
+                            // Load source PDF
+                            const srcArrayBuffer = await label.fileData.file.arrayBuffer();
+                            const srcPdf = await PDFLib.PDFDocument.load(srcArrayBuffer);
+                            
+                            // Embed the page
+                            const [embeddedPage] = await pdfDoc.embedPdf(srcPdf, [label.pageNum - 1]);
+                            
+                            // Calculate scaling to fit
+                            const scale = Math.min(
+                                cellWidth / embeddedPage.width,
+                                cellHeight / embeddedPage.height
+                            );
+                            
+                            const scaledWidth = embeddedPage.width * scale;
+                            const scaledHeight = embeddedPage.height * scale;
+                            
+                            // Center in cell
+                            const offsetX = (cellWidth - scaledWidth) / 2;
+                            const offsetY = (cellHeight - scaledHeight) / 2;
+                            
+                            page.drawPage(embeddedPage, {
+                                x: x + offsetX,
+                                y: y + offsetY,
+                                width: scaledWidth,
+                                height: scaledHeight
+                            });
+                        } catch (error) {
+                            console.error('Error embedding page:', error);
+                            // Draw placeholder
+                            page.drawRectangle({
+                                x: x,
+                                y: y,
+                                width: cellWidth,
+                                height: cellHeight,
+                                borderColor: PDFLib.rgb(0.8, 0.8, 0.8),
+                                borderWidth: 2
+                            });
+                        }
+                    }
+                }
+                
+                updateProgress(100);
+                
+                // Save PDF
+                const pdfBytes = await pdfDoc.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                
+                // Download
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename.value || `etiquetas_servientrega_${dateStr}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showToast('✅ PDF generado correctamente');
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                showToast(`❌ Error al generar PDF: ${error.message}`);
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '⬇️ Generar y Descargar PDF';
+            }
+        }
+
+        function showPreview() {
+            showToast('🔍 Vista previa próximamente');
+        }
+
+        // Make functions global for inline handlers
+        window.removeFile = removeFile;
+        window.removeLabel = removeLabel;
+        window.showManualSelectionModal = showManualSelectionModal;
+        window.appState = appState;
+    </script>
+</body>
+</html>();
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                
+                fileData.pages = [];
+                
+                // Extract text from each page
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const text = textContent.items.map(item => item.str).join(' ');
+                    
+                    // Generate thumbnail
+                    const viewport = page.getViewport({ scale: 0.5 });
+                    const canvas = document.createElement('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    const context = canvas.getContext('2d');
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+                    const thumbnail = canvas.toDataURL();
+                    
+                    fileData.pages.push({
+                        pageNum: i,
+                        text: text,
+                        thumbnail: thumbnail,
+                        width: page.view[2],
+                        height: page.view[3]
+                    });
+                    
+                    // Check for SERVIENTREGA
+                    if (text.match(/SERVIENTREGA/i)) {
+                        fileData.detectedPages.push(i);
+                    }
+                }
+                
+                // Auto-select detected pages or show manual selection
+                if (fileData.detectedPages.length > 0) {
+                    fileData.status = 'ok';
+                    // Auto-add first detected page
+                    addLabelToSelection(fileData, fileData.detectedPages[0]);
+                    showToast(`✓ Detectado en ${file.name}`);
+                } else {
+                    fileData.status = 'manual';
+                    showToast(`⚠️ ${file.name} requiere selección manual`);
+                    // Show modal for manual selection
+                    await showManualSelectionModal(fileData);
+                }
+            } catch (error) {
+                fileData.status = 'error';
+                fileData.error = error.message;
+                showToast(`❌ Error en ${file.name}: ${error.message}`);
+            }
+            
+            renderFilesList
